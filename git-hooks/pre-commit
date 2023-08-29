@@ -1,0 +1,38 @@
+#!/bin/bash
+
+source .git/hooks/vars.sh
+
+# Create temporary backup directory
+mkdir -p "$TMP_BACKUP_DIR"
+
+# Save merge data
+cp .git/*MERGE* "$TMP_BACKUP_DIR"
+
+# Search for files containing the marked blocks
+files_with_blocks=$(git diff --name-only --cached -S"$start_mark" | grep -v "$HOOKS_DIR")
+
+# Stash unstaged changes, to avoid them interfering with staged changes
+git stash --keep-index --include-untracked $files_with_blocks
+
+for file in $files_with_blocks; do
+    # Backup the original file to temporary directory
+    cp --parents "$file" "$TMP_BACKUP_DIR/"
+
+    # Remove the marked block from the source file
+    sed -i "/$start_mark/,/$end_mark/d" "$file"
+
+    # Stage the updated file
+    git add "$file"
+
+    # Restore original file
+    mv "$TMP_BACKUP_DIR/$file" "$file"
+done
+
+# Restore unstaged changes
+git stash pop
+
+# Restore merge data
+mv $TMP_BACKUP_DIR/*MERGE* ".git"
+
+# Remove temporary backup directory
+rm -rf "$TMP_BACKUP_DIR"
