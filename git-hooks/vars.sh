@@ -8,3 +8,4 @@ HOOKS_DIR="git-hooks"
 
 start_mark="DO NOT COMMIT BEGIN"
 end_mark="DO NOT COMMIT END"
+line_mark="DO NOT COMMIT LINE"
